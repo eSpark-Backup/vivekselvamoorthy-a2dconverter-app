@@ -17,8 +17,6 @@ function MyInput({
     <View style={styles.container}>
       <Text style={styles.labelStyling}>{label}:</Text>
       <GapView mode="horizontal" />
-      {/* <View style={styles.inputContainer}>
-      </View> */}
       <GradientBorderView
         gradientProps={{
           colors: ['#161A1D', '#FFFFFF', '#B1A7A6'],
@@ -54,14 +52,21 @@ const styles = StyleSheet.create({
     fontSize: 16,
     height: 30,
     paddingVertical: 0,
-    paddingHorizontal: 10,
+    paddingHorizontal: 8,
     zIndex: 1,
+    fontFamily: 'InriaSans-Regular',
   },
-  labelStyling: {textTransform: 'uppercase', color: '#FFFFFF66', fontSize: 16},
+  labelStyling: {
+    textTransform: 'uppercase',
+    color: '#FFFFFF66',
+    fontSize: 16,
+    fontFamily: 'InriaSans-Regular',
+  },
   placeholderStyling: {
     color: '#6C6C6C',
     position: 'absolute',
     right: 10,
     fontSize: 12,
+    fontFamily: 'InriaSans-Regular',
   },
 });
