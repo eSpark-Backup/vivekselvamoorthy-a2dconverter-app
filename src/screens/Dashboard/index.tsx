@@ -85,9 +85,6 @@ function Dashboard(): React.JSX.Element {
     return intervalId;
   }, []);
 
-  console.log('width', width);
-  console.log('height', height);
-
   useEffect(() => {
     const rpm = Math.random() * 100;
     const Oil = Math.random() * 100;
@@ -104,8 +101,6 @@ function Dashboard(): React.JSX.Element {
 
     // Store the interval ID
     const intervalId = getGaugeValues();
-    console.log('riveRef.current', riveRef.current);
-    console.log('isTablet', isTablet());
 
     // Clean up the interval when component unmounts
     return () => {
