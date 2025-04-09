@@ -3,15 +3,18 @@ import {StyleSheet, Text, TextInput, View} from 'react-native';
 import {GradientBorderView} from '@good-react-native/gradient-border';
 
 import GapView from '../GapView';
+import {handleDigitsOnly} from '../../utils/helperfunctions';
 
 function MyInput({
   label,
   value,
   placeholder,
+  onChangeText,
 }: {
   label: string;
   value?: string;
   placeholder: string;
+  onChangeText?: (text: string) => void;
 }) {
   return (
     <View style={styles.container}>
@@ -23,7 +26,16 @@ function MyInput({
           locations: [0, 0.39, 1],
         }}
         style={styles.inputContainer}>
-        <TextInput style={styles.inputStyling} value={value ?? '0'} />
+        <TextInput
+          style={styles.inputStyling}
+          value={value ?? '0'}
+          onChangeText={e => onChangeText?.(handleDigitsOnly(e))}
+          onBlur={() => {
+            if (value === '') {
+              onChangeText?.('0');
+            }
+          }}
+        />
       </GradientBorderView>
       <Text style={styles.placeholderStyling}>{placeholder}</Text>
     </View>
