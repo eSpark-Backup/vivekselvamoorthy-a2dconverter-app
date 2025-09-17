@@ -19,13 +19,19 @@ import BackImage from '../../../src/assets/background.png';
 import {Radar, Thumb} from '../../../src/assets';
 import {GapView, MyInput} from '../../../src/components';
 import {isTablet} from '../../utils/helperfunctions';
+import ConnectionModal from '../../components/ConnectionModal';
+import {useBLE} from '../../hooks/useBLE';
+import {Device, useDashboardStore} from '../../store/DashboardStore';
 
 const resourceName = 'wheel_dash';
 
 const {width, height} = Dimensions.get('window');
 
-function Dashboard(): React.JSX.Element {
+const Dashboard: React.FC = () => {
   const riveRef = useRef<RiveRef>(null);
+  const {deviceData, setDeviceData} = useDashboardStore();
+
+  const [show, setShow] = useState(true);
 
   const [hours, setHours] = useState('0');
   const [alternator, setAlternator] = useState('0');
@@ -33,65 +39,53 @@ function Dashboard(): React.JSX.Element {
   const [engEco, setEngEco] = useState('0');
   const [depth, setDepth] = useState('0');
 
+  const {TACH, FUEL_1, COOLANT, OIL_PRES} = deviceData?.data ?? {};
+  console.log('deviceData', deviceData);
+
+  const {isConnected} = useBLE();
+
+  console.log('isConnected Dash', isConnected);
+
   const getGaugeValues = useCallback(() => {
-    const rpm = Math.random() * 40;
-    const cool = Math.random() * 30;
-    const Fuel = Math.random() * 50;
-    const Oil = Math.random() * 50;
-
-    // Store interval ID so we can clear it later
-    const intervalId = setInterval(() => {
-      const RpmVal = Math.random() * rpm;
-      const CoolVal = Math.random() * cool;
-      const FuelVal = Math.random() * Fuel;
-      const OilVal = Math.random() * Oil;
-
-      // console.log('RPM', ((RpmVal / 8) * 1000).toFixed(1));
-      // console.log('Coolant', (CoolVal * 5).toFixed(0));
-      // console.log('Fuel', (FuelVal * 2).toFixed(0));
-      // console.log('Oil', (OilVal / 5).toFixed(0));
-
-      if (riveRef.current) {
-        riveRef.current.setTextRunValue(
-          'RpmVal',
-          ((RpmVal / 8) * 1000).toFixed(1),
-        );
-        riveRef.current.setTextRunValue('CoolVal', (CoolVal * 5).toFixed(0));
-        riveRef.current.setTextRunValue('FuelVal', (FuelVal * 2).toFixed(0));
-        riveRef.current.setTextRunValue('OilVal', (OilVal / 5).toFixed(0));
-        riveRef.current.setInputState(
-          'State Machine 1',
-          'ERPMs',
-          Number(RpmVal.toFixed(1)),
-        );
-        riveRef.current.setInputState(
-          'State Machine 1',
-          'CReads',
-          Number(CoolVal.toFixed(0)),
-        );
-        riveRef.current.setInputState(
-          'State Machine 1',
-          'FReads',
-          Number(FuelVal.toFixed(1)),
-        );
-        riveRef.current.setInputState(
-          'State Machine 1',
-          'OReads',
-          Number(OilVal.toFixed(1)),
-        );
-      }
-    }, 1000);
-
-    return intervalId;
-  }, []);
-
-  useEffect(() => {
-    const rpm = Math.random() * 100;
-    const Oil = Math.random() * 100;
+    const rpm = TACH ?? 0;
+    const cool = COOLANT ?? 0;
+    const fuel = FUEL_1 ?? 0;
+    const oil = OIL_PRES ?? 0;
 
     if (riveRef.current) {
-      riveRef.current.setInputState('State Machine 1', 'ERPMs', rpm);
-      riveRef.current.setInputState('State Machine 1', 'OReads', Oil);
+      riveRef.current.setTextRunValue(
+        'RpmVal',
+        ((rpm / 100 / 8) * 1000).toFixed(1),
+      );
+      riveRef.current.setTextRunValue('CoolVal', ((cool / 500) * 5).toFixed(0));
+      riveRef.current.setTextRunValue('FuelVal', ((fuel / 100) * 2).toFixed(0));
+      riveRef.current.setTextRunValue('OilVal', (oil / 100 / 5).toFixed(0));
+
+      riveRef.current.setInputState(
+        'State Machine 1',
+        'ERPMs',
+        Number((rpm / 100).toFixed(1)),
+      );
+      riveRef.current.setInputState(
+        'State Machine 1',
+        'CReads',
+        Number((cool / 500).toFixed(0)),
+      );
+      riveRef.current.setInputState(
+        'State Machine 1',
+        'FReads',
+        Number((fuel / 100).toFixed(1)),
+      );
+      riveRef.current.setInputState(
+        'State Machine 1',
+        'OReads',
+        Number((oil / 100).toFixed(1)),
+      );
+    }
+  }, [TACH, COOLANT, FUEL_1, OIL_PRES]); // depend on the actual values!
+
+  useEffect(() => {
+    if (riveRef.current) {
       riveRef.current.setInputState(
         'State Machine 1',
         'ShowTab',
@@ -99,14 +93,9 @@ function Dashboard(): React.JSX.Element {
       );
     }
 
-    // Store the interval ID
-    const intervalId = getGaugeValues();
-
-    // Clean up the interval when component unmounts
-    return () => {
-      clearInterval(intervalId);
-    };
-  }, [getGaugeValues]);
+    // update gauges whenever deviceData changes
+    getGaugeValues();
+  }, [getGaugeValues, deviceData]);
 
   const handleValueChange = useCallback(
     (low: number, high: number, byUser: boolean) => {
@@ -126,6 +115,7 @@ function Dashboard(): React.JSX.Element {
         style={{flex: 1}}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0} // adjust if header present
       >
+        <ConnectionModal isVisible={show} onClose={() => setShow(false)} />
         <ScrollView
           contentContainerStyle={styles.container}
           showsVerticalScrollIndicator={false}>
@@ -242,7 +232,7 @@ function Dashboard(): React.JSX.Element {
       </KeyboardAvoidingView>
     </ImageBackground>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
