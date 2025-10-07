@@ -24,7 +24,7 @@
     "react-native-svg": "^15.11.2",
     "react-native-svg-transformer": "^1.5.0",
     "react-native-system-navigation-bar": "^2.6.4",
-    "rive-react-native": "^9.1.0",
+    "rive-react-native": "^9.6.1",
     "rn-range-slider": "^2.2.2",
     "zustand": "^5.0.8"
   },

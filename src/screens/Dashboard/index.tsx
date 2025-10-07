@@ -55,31 +55,31 @@ const Dashboard: React.FC = () => {
     if (riveRef.current) {
       riveRef.current.setTextRunValue(
         'RpmVal',
-        ((rpm / 100 / 8) * 1000).toFixed(1),
+        (rpm).toFixed(1),
       );
-      riveRef.current.setTextRunValue('CoolVal', ((cool / 500) * 5).toFixed(0));
-      riveRef.current.setTextRunValue('FuelVal', ((fuel / 100) * 2).toFixed(0));
-      riveRef.current.setTextRunValue('OilVal', (oil / 100 / 5).toFixed(0));
+      riveRef.current.setTextRunValue('CoolVal', (cool).toFixed(0));
+      riveRef.current.setTextRunValue('FuelVal', (fuel).toFixed(0));
+      riveRef.current.setTextRunValue('OilVal', (oil).toFixed(0));
 
       riveRef.current.setInputState(
         'State Machine 1',
         'ERPMs',
-        Number((rpm / 100).toFixed(1)),
+        Number( 8/(1000/rpm) )
       );
       riveRef.current.setInputState(
         'State Machine 1',
         'CReads',
-        Number((cool / 500).toFixed(0)),
+        Number((cool / 5)),
       );
       riveRef.current.setInputState(
         'State Machine 1',
         'FReads',
-        Number((fuel / 100).toFixed(1)),
+        Number((fuel / 2)),
       );
       riveRef.current.setInputState(
         'State Machine 1',
         'OReads',
-        Number((oil / 100).toFixed(1)),
+        Number(( oil/2)),
       );
     }
   }, [TACH, COOLANT, FUEL_1, OIL_PRES]); // depend on the actual values!
@@ -92,7 +92,6 @@ const Dashboard: React.FC = () => {
         isTablet() ? true : false,
       );
     }
-
     // update gauges whenever deviceData changes
     getGaugeValues();
   }, [getGaugeValues, deviceData]);
@@ -267,6 +266,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 10,
     top: 10,
+    padding: 10
   },
   rightInputsContainer: {
     position: 'absolute',

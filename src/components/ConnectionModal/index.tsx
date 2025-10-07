@@ -151,7 +151,7 @@ export default function ConnectionModal({
               fontSize: 30,
               color: 'white',
             }}>
-            {isScanning ? 'Scanning Devices' : 'Scan Devices'}
+            {isScanning ? 'Scanning Devices...' : 'Scan Devices'}
           </Text>
           {isScanning ? <ActivityIndicator size={'large'} /> : null}
         </TouchableOpacity>
