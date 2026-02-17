@@ -24,14 +24,24 @@ export const useBLE = () => {
   const bleManager = useRef(new BleManager()).current;
   const [connectedDevice, setConnectedDevice] = useState<Device | null>(null);
   const [isScanning, setIsScanning] = useState(false);
-  const [isConnected, setIsConnected] = useState(false);
+
   const [scannedDevices, setScannedDevices] = useState<Device[]>([]);
   // const [deviceData, setDeviceData] = useState<BleDeviceData | null>(null);
-  const [deviceDisconnected, setDeviceDisconnected] = useState(false);
+
   const [selectedDevice, setSelectedDevice] =
     useState<ConnectedBleDevice | null>(null);
 
-  const {deviceData, setDeviceData} = useDashboardStore();
+  const {
+    bleDevice,
+    setBleDevice,
+    setDeviceData,
+    isConnected,
+    setIsConnected,
+    isPaused,
+    setIsPaused,
+    isDeviceDisconnected,
+    setIsDeviceDisconnected,
+  } = useDashboardStore();
   const reconnectingRef = useRef(false);
 
   const requestPermissions = async () => {
@@ -62,13 +72,11 @@ export const useBLE = () => {
       console.log('UART device:', device);
 
       // Ensure the device has a name and advertises the UART service
-      if (true) {
-        if (device) {
-          console.log('UART device:', device.name, device.id);
-          foundDevices.set(device.id, device);
-          console.log('Found UART device:', Array.from(foundDevices.values()));
-          setScannedDevices(Array.from(foundDevices.values())); // Convert Map to array
-        }
+      if (device && device.name && device.name.startsWith('ESP_')) {
+        console.log('UART device:', device.name, device.id);
+        foundDevices.set(device.id, device);
+        console.log('Found UART device:', Array.from(foundDevices.values()));
+        setScannedDevices(Array.from(foundDevices.values())); // Convert Map to array
       }
     });
 
@@ -82,14 +90,16 @@ export const useBLE = () => {
     setIsScanning(false);
   };
   //tries to connect to a BLE
-  const connectToDevice = async (device: Device) => {
+  const connectToDevice = async (device: Device): Promise<boolean> => {
     try {
+      setIsPaused(false);
       const connected = await device.connect();
       const mtu = await device.requestMTU(512);
       console.log('MTU set to:', mtu);
       const discovered =
         await connected.discoverAllServicesAndCharacteristics();
 
+      setBleDevice(discovered);
       setConnectedDevice(discovered);
       setIsConnected(true);
       console.log('Connected to:', device.name);
@@ -110,16 +120,20 @@ export const useBLE = () => {
           console.log('Device disconnected:', disconnectedDevice);
 
           setIsConnected(false);
+          setBleDevice(null);
           setConnectedDevice(null);
 
           // Attempt to reconnect
           // await reconnect();
-          setDeviceDisconnected(true);
+          setIsDeviceDisconnected(true);
         },
       );
+      setScannedDevices([]);
+      return true;
     } catch (error) {
       console.error('Connection error:', error);
       setIsConnected(false);
+      return false;
     }
   };
 
@@ -156,8 +170,8 @@ export const useBLE = () => {
                 .map(byte => String.fromCharCode(byte))
                 .join('');
 
-              // console.log('Numeric data:', numericData);
-              // console.log('Decoded string:', JSON.parse(decodedString));
+              console.log('Numeric data:', numericData);
+              console.log('Decoded string:', decodedString);
 
               setTimeout(() => {
                 setDeviceData({
@@ -181,9 +195,12 @@ export const useBLE = () => {
 
   // might be needed
   const disconnect = async () => {
-    if (connectedDevice) {
-      await connectedDevice.cancelConnection();
+    console.log('Disconnecting from device...', bleDevice);
+    if (bleDevice) {
+      await bleDevice.cancelConnection();
+      setBleDevice(null);
       setConnectedDevice(null);
+      setSelectedDevice(null);
       setIsConnected(false);
       console.log('Disconnected from device');
     }
@@ -204,17 +221,16 @@ export const useBLE = () => {
     const interval = setInterval(async () => {
       const status = await connectionStatus();
       setIsConnected(status);
-      if (status === false && deviceDisconnected) {
+      if (status === false && isDeviceDisconnected && !isPaused) {
         await reconnect();
       }
     }, 1500);
 
     return () => clearInterval(interval);
-  }, [deviceDisconnected]);
+  }, [isDeviceDisconnected]);
 
-  //Reconnection logic upon pressing Bluetooth Status Button on settings screen(tested and verified)
   const reconnect = async () => {
-    if (reconnectingRef.current) return; // prevent multiple attempts
+    if (reconnectingRef.current && isPaused) return; // prevent multiple attempts
     reconnectingRef.current = true;
     try {
       let device: Device | null = null;
@@ -235,11 +251,12 @@ export const useBLE = () => {
         return;
       }
 
-      const mtu = await device.requestMTU(64);
+      const mtu = await device.requestMTU(512);
       const discovered = await device.discoverAllServicesAndCharacteristics();
+      setBleDevice(discovered);
       setConnectedDevice(discovered);
       setIsConnected(true);
-      setDeviceDisconnected(false);
+      setIsDeviceDisconnected(false);
 
       console.log('Reconnection successful!');
 
@@ -259,6 +276,10 @@ export const useBLE = () => {
     return state === State.PoweredOn;
   };
 
+  const pauseReconnection = () => {
+    setIsPaused(true);
+  };
+
   return {
     startScan,
     isScanning,
@@ -270,5 +291,7 @@ export const useBLE = () => {
     reconnect,
     isConnected,
     isBluetoothEnabled,
+    pauseReconnection,
+    isDeviceDisconnected,
   };
 };

@@ -26,8 +26,21 @@ export interface BLEDeviceInfo {
 }
 
 export interface DeviceData {
-  cutoff_detection: boolean;
-  low_battery_indication: boolean;
+  id: string;
+  name: string;
+  data: {
+    VOLT_SIG: number;
+    SWITCH: number;
+    TACH: number;
+    TILT_TRM: number;
+    OIL_PRES: number;
+    COOLANT: number;
+    WARNING: number;
+    FUEL_1: number;
+    FUEL_2: number;
+    STARTER: number;
+  };
+  timestamp: string;
 }
 
 export interface ConnectedDevice {

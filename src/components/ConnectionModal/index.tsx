@@ -108,10 +108,27 @@ export default function ConnectionModal({
     }
   };
 
-  const selectDevice = (device: any): void => {
+  const selectDevice = async (device: any): Promise<void> => {
     console.log('Selected device:', device);
-    connectToDevice(device);
-    onClose();
+    try {
+      const connected = await connectToDevice(device);
+      if (connected) {
+        console.log('Device connected successfully');
+        onClose();
+      } else {
+        Alert.alert(
+          'Connection Failed',
+          'Failed to connect to the device. Please try again.',
+        );
+      }
+    } catch (error) {
+      Alert.alert(
+        'Connection Error',
+        error instanceof Error
+          ? error.message
+          : 'An error occurred during connection',
+      );
+    }
   };
 
   return (

@@ -1,35 +1,36 @@
 import {create} from 'zustand';
 import {persist} from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-export interface Device {
-  id: string;
-  name: string;
-  data: {
-    VOLT_SIG: number;
-    SWITCH: number;
-    TACH: number;
-    TILT_TRM: number;
-    OIL_PRES: number;
-    COOLANT: number;
-    WARNING: number;
-    FUEL_1: number;
-    FUEL_2: number;
-    STARTER: number;
-  };
-  timestamp: string;
-}
+import {DeviceData} from '../types/ble';
+import {Device} from 'react-native-ble-plx';
 
 interface DashboardStoreTypes {
-  deviceData: Device | null;
-  setDeviceData: (deviceData: any) => void;
+  deviceData: DeviceData | null;
+  bleDevice: Device | null;
+  isConnected: boolean;
+  isPaused: boolean;
+  isDeviceDisconnected: boolean;
+  setDeviceData: (deviceData: DeviceData) => void;
+  setBleDevice: (device: Device | null) => void;
+  setIsConnected: (status: boolean) => void;
+  setIsPaused: (status: boolean) => void;
+  setIsDeviceDisconnected: (status: boolean) => void;
 }
 
 export const useDashboardStore = create<DashboardStoreTypes>()(
   persist(
     (set, get) => ({
       deviceData: null,
-      setDeviceData: (data: Device) => set(() => ({deviceData: data})),
+      bleDevice: null,
+      isConnected: false,
+      isPaused: false,
+      isDeviceDisconnected: false,
+      setDeviceData: (data: DeviceData) => set(() => ({deviceData: data})),
+      setBleDevice: (device: Device | null) => set(() => ({bleDevice: device})),
+      setIsConnected: (status: boolean) => set(() => ({isConnected: status})),
+      setIsPaused: (status: boolean) => set(() => ({isPaused: status})),
+      setIsDeviceDisconnected: (status: boolean) =>
+        set(() => ({isDeviceDisconnected: status})),
     }),
     {
       name: 'project-storage',
